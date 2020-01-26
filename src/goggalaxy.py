@@ -64,7 +64,10 @@ class goggalaxy(kp.Plugin):
         pass
 
     def on_events(self, flags):
-        pass
+        if flags & kp.Events.PACKCONFIG:
+            self.info("Configuration changed, rebuilding catalog...")
+            self._read_config()
+            self.on_catalog()
 
     def _load_games(self):
         games = []
