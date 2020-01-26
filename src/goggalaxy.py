@@ -38,6 +38,7 @@ class goggalaxy(kp.Plugin):
         pass
 
     def on_catalog(self):
+        self.set_catalog([self._create_launch_item()])
         pass
 
     def on_suggest(self, user_input, items_chain):
@@ -54,3 +55,13 @@ class goggalaxy(kp.Plugin):
 
     def on_events(self, flags):
         pass
+
+    def _create_launch_item(self):
+        return self.create_item(
+            category=kp.ItemCategory.KEYWORD,
+            label="GOG-Test",
+            short_desc="2nd line",
+            target="Test",
+            args_hint=kp.ItemArgsHint.FORBIDDEN,
+            hit_hint=kp.ItemHitHint.NOARGS
+            )
