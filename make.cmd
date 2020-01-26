@@ -41,10 +41,6 @@ if "%1"=="build" (
 )
 
 if "%1"=="install" (
-    echo TODO: ensure the INSTALL_DIR variable declared at the top of this
-    echo       script complies to your configuration and remove this message
-    exit /1
-
     copy /Y "%BUILD_DIR%\*.keypirinha-package" "%INSTALL_DIR%\"
     goto end
 )
@@ -56,10 +52,6 @@ if "%1"=="dev" (
         "%BUILD_DIR%\%PACKAGE_NAME%.keypirinha-package" ^
         -r LICENSE* README* src
     popd
-    
-    echo TODO: ensure the INSTALL_DIR variable declared at the top of this
-    echo       script complies to your configuration and remove this message
-    exit /1
 
     copy /Y "%BUILD_DIR%\*.keypirinha-package" "%INSTALL_DIR%\"
     goto end
