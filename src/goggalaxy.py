@@ -17,9 +17,13 @@ class goggalaxy(kp.Plugin):
     EXE_NAME = "GalaxyClient.exe"
     DEFAULT_PATH = "%PROGRAMFILES(X86)%\\GOG Galaxy\\"
     DEFAULT_PATH_TO_GALAXY_CLIENT = DEFAULT_PATH + EXE_NAME
+    DB_NAME = "galaxy-2.0.db"
+    DEFAULT_DB_PATH = "%PROGRAMDATA%\\GOG.com\\Galaxy\\storage\\"
+    DEFAULT_DB = DEFAULT_DB_PATH + DB_NAME
 
     # Variables
     path_to_galaxy_client = DEFAULT_PATH_TO_GALAXY_CLIENT
+    path_to_db = DEFAULT_DB
 
     def __init__(self):
         super().__init__()
@@ -65,6 +69,12 @@ class goggalaxy(kp.Plugin):
             "main",
             self.DEFAULT_PATH_TO_GALAXY_CLIENT
             )
+        self.path_to_db = settings.get_stripped(
+            "path_to_db",
+            "main",
+            self.DEFAULT_DB
+            )
+
         icon_handle = self.load_icon(
             "@{},0".format(self.path_to_galaxy_client))
         if icon_handle:
