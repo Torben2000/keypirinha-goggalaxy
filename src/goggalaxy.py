@@ -3,6 +3,7 @@
 import keypirinha as kp
 import keypirinha_util as kpu
 import keypirinha_net as kpnet
+import os
 
 class goggalaxy(kp.Plugin):
     """
@@ -31,11 +32,17 @@ class goggalaxy(kp.Plugin):
 
     More detailed documentation at: http://keypirinha.com/api/plugin.html
     """
+    # Constants
+    DEFAULT_PATH_TO_GALAXY_CLIENT = "%PROGRAMFILES(X86)%\\GOG Galaxy\\GalaxyClient.exe"
+
+    # Variables
+    path_to_galaxy_client = DEFAULT_PATH_TO_GALAXY_CLIENT
+
     def __init__(self):
         super().__init__()
 
     def on_start(self):
-        pass
+        self._read_config()
 
     def on_catalog(self):
         self.set_catalog([self._create_launch_item()])
@@ -44,7 +51,7 @@ class goggalaxy(kp.Plugin):
         pass
 
     def on_execute(self, item, action):
-        kpu.shell_execute("C:\\Program Files (x86)\\GOG Galaxy\\GalaxyClient.exe", ["/command=runGame", "/gameId=" + item.target()])
+        kpu.shell_execute(os.path.expandvars(self.path_to_galaxy_client), ["/command=runGame", "/gameId=" + item.target()])
 
     def on_activated(self):
         pass
@@ -64,3 +71,7 @@ class goggalaxy(kp.Plugin):
             args_hint=kp.ItemArgsHint.FORBIDDEN,
             hit_hint=kp.ItemHitHint.NOARGS
             )
+
+    def _read_config(self):
+        settings = self.load_settings()
+        self.path_to_galaxy_client = settings.get_stripped("path_to_galaxy_client", "main", self.DEFAULT_PATH_TO_GALAXY_CLIENT)
