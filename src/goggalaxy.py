@@ -3,6 +3,14 @@
 import keypirinha as kp
 import keypirinha_util as kpu
 import os
+import sqlite3
+
+
+class Game():
+    def __init__(self, platform, releaseKey, title):
+        self.platform = platform
+        self.releaseKey = releaseKey
+        self.title = title
 
 
 class goggalaxy(kp.Plugin):
@@ -32,7 +40,13 @@ class goggalaxy(kp.Plugin):
         self._read_config()
 
     def on_catalog(self):
-        self.set_catalog([self._create_launch_item()])
+        games = self._load_games()
+
+        catalog = []
+        for game in games:
+            catalog.append(self._create_launch_item(game))
+
+        self.set_catalog(catalog)
 
     def on_suggest(self, user_input, items_chain):
         pass
@@ -52,12 +66,31 @@ class goggalaxy(kp.Plugin):
     def on_events(self, flags):
         pass
 
-    def _create_launch_item(self):
+    def _load_games(self):
+        games = []
+        try:
+            connection = sqlite3.connect(os.path.expandvars(self.path_to_db))
+            c = connection.cursor()
+            c.execute('SELECT p.name as platform, gp.releaseKey, substr(gp.value, 11, length(gp.value)-12) as title from GamePieces gp, InstalledExternalProducts iep, platforms p WHERE gp.gamePieceTypeId = 3396 AND iep.platformId = p.id AND gp.releaseKey = (p.name || "_" || iep.productId);')
+        except:
+            self.err("Unable to load database file: " + str(self.path_to_db))
+            return games
+
+        for row in c.fetchall():
+            platform = row[0]
+            releaseKey = row[1]
+            title = row[2]
+            self.info([platform, releaseKey, title])
+            games.append(Game(platform, releaseKey, title))
+
+        return games
+
+    def _create_launch_item(self, game):
         return self.create_item(
             category=kp.ItemCategory.KEYWORD,
-            label="GOG-Test",
-            short_desc="2nd line",
-            target="generic_51153138506417067",
+            label="GOG Galaxy: " + game.title,
+            short_desc=game.platform,
+            target=game.releaseKey,
             args_hint=kp.ItemArgsHint.FORBIDDEN,
             hit_hint=kp.ItemHitHint.NOARGS
             )
