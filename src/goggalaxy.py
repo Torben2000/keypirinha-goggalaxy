@@ -74,17 +74,23 @@ class goggalaxy(kp.Plugin):
         try:
             connection = sqlite3.connect(os.path.expandvars(self.path_to_db))
             c = connection.cursor()
-            c.execute('SELECT p.name as platform, gp.releaseKey, substr(gp.value, 11, length(gp.value)-12) as title from GamePieces gp, InstalledExternalProducts iep, platforms p WHERE gp.gamePieceTypeId = 3396 AND iep.platformId = p.id AND gp.releaseKey = (p.name || "_" || iep.productId);')
+
+            queries = [
+                'SELECT p.name as platform, gp.releaseKey, substr(gp.value, 11, length(gp.value)-12) as title from GamePieces gp, InstalledExternalProducts iep, platforms p WHERE gp.gamePieceTypeId = 3396 AND iep.platformId = p.id AND gp.releaseKey = (p.name || "_" || iep.productId);',
+                'SELECT "generic" as platform, le.releaseKey, substr(gp.value, 11, length(gp.value)-12) as title from GamePieces gp, LinkedExecutables le WHERE gp.gamePieceTypeId = 3396 AND gp.releaseKey = le.releaseKey;'
+            ]
+
+            for query in queries:
+                c.execute(query)
+                for row in c.fetchall():
+                    platform = row[0]
+                    releaseKey = row[1]
+                    title = row[2]
+                    self.info([platform, releaseKey, title])
+                    games.append(Game(platform, releaseKey, title))
+
         except:
             self.err("Unable to load database file: " + str(self.path_to_db))
-            return games
-
-        for row in c.fetchall():
-            platform = row[0]
-            releaseKey = row[1]
-            title = row[2]
-            self.info([platform, releaseKey, title])
-            games.append(Game(platform, releaseKey, title))
 
         return games
 
