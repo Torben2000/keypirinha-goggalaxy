@@ -75,3 +75,7 @@ class goggalaxy(kp.Plugin):
     def _read_config(self):
         settings = self.load_settings()
         self.path_to_galaxy_client = settings.get_stripped("path_to_galaxy_client", "main", self.DEFAULT_PATH_TO_GALAXY_CLIENT)
+        icon_handle = self.load_icon("@{},0".format(self.path_to_galaxy_client))
+        if icon_handle:
+            self.set_default_icon(icon_handle)
+
