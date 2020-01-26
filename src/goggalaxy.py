@@ -44,7 +44,7 @@ class goggalaxy(kp.Plugin):
         pass
 
     def on_execute(self, item, action):
-        kpu.shell_execute("C:\\Program Files (x86)\\GOG Galaxy\\GalaxyClient.exe", ["/command=runGame", "/gameId=generic_51153138506417067"])
+        kpu.shell_execute("C:\\Program Files (x86)\\GOG Galaxy\\GalaxyClient.exe", ["/command=runGame", "/gameId=" + item.target()])
 
     def on_activated(self):
         pass
@@ -60,7 +60,7 @@ class goggalaxy(kp.Plugin):
             category=kp.ItemCategory.KEYWORD,
             label="GOG-Test",
             short_desc="2nd line",
-            target="Test",
+            target="generic_51153138506417067",
             args_hint=kp.ItemArgsHint.FORBIDDEN,
             hit_hint=kp.ItemHitHint.NOARGS
             )
