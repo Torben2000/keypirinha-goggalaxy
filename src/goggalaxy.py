@@ -39,13 +39,12 @@ class goggalaxy(kp.Plugin):
 
     def on_catalog(self):
         self.set_catalog([self._create_launch_item()])
-        pass
 
     def on_suggest(self, user_input, items_chain):
         pass
 
     def on_execute(self, item, action):
-        pass
+        kpu.shell_execute("C:\\Program Files (x86)\\GOG Galaxy\\GalaxyClient.exe", ["/command=runGame", "/gameId=generic_51153138506417067"])
 
     def on_activated(self):
         pass
