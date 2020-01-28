@@ -89,6 +89,8 @@ class goggalaxy(kp.Plugin):
                     self.info([platform, releaseKey, title])
                     games.append(Game(platform, releaseKey, title))
 
+            connection.close()
+
         except:
             self.err("Unable to load database file: " + str(self.path_to_db))
 
