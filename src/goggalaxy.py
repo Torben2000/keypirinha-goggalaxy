@@ -4,6 +4,7 @@ import keypirinha as kp
 import keypirinha_util as kpu
 import os
 import sqlite3
+import re
 
 
 class Game():
@@ -32,6 +33,7 @@ class goggalaxy(kp.Plugin):
     path_to_exe = os.path.join(path_to_galaxy_client, EXE_NAME)
     path_to_db = os.path.expandvars(DEFAULT_DB_PATH)
     path_to_db_file = os.path.join(path_to_db, DB_NAME)
+    platforms = {}
 
     def __init__(self):
         super().__init__()
@@ -40,6 +42,7 @@ class goggalaxy(kp.Plugin):
         self._read_config()
 
     def on_catalog(self):
+        self._load_platforms()
         games = self._load_games()
 
         catalog = []
@@ -68,6 +71,18 @@ class goggalaxy(kp.Plugin):
             self.info("Configuration changed, rebuilding catalog...")
             self._read_config()
             self.on_catalog()
+
+    def _load_platforms(self):
+        self.platforms = {}
+
+        vendor_js = kpu.slurp_text_file(os.path.join(self.path_to_galaxy_client, "web\\vendor.js"))
+
+        platform_ids = {}
+        for m in re.finditer("PlatformId\\[\\\"(.*)\\\"\\] = \\\"(.*)\\\";", vendor_js):
+            platform_ids[m.group(1)] = m.group(2)
+
+        for m in re.finditer("AccountFullPlatformName\\[\\\"(.*)\\\"\\] = \\\"(.*)\\\";", vendor_js):
+            self.platforms[platform_ids[m.group(1)]] = m.group(2)
 
     def _load_games(self):
         games = []
@@ -100,7 +115,7 @@ class goggalaxy(kp.Plugin):
         return self.create_item(
             category=kp.ItemCategory.REFERENCE,
             label="GOG Galaxy: " + game.title,
-            short_desc=game.platform,
+            short_desc=self.platforms[game.platform] if game.platform in self.platforms else str(game.platform).capitalize(),
             target=game.releaseKey,
             args_hint=kp.ItemArgsHint.FORBIDDEN,
             hit_hint=kp.ItemHitHint.NOARGS
