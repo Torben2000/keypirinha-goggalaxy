@@ -23,15 +23,15 @@ class goggalaxy(kp.Plugin):
 
     # Constants
     EXE_NAME = "GalaxyClient.exe"
-    DEFAULT_PATH = "%PROGRAMFILES(X86)%\\GOG Galaxy\\"
-    DEFAULT_PATH_TO_GALAXY_CLIENT = DEFAULT_PATH + EXE_NAME
+    DEFAULT_PATH_TO_GALAXY_CLIENT = "%PROGRAMFILES(X86)%\\GOG Galaxy"
     DB_NAME = "galaxy-2.0.db"
-    DEFAULT_DB_PATH = "%PROGRAMDATA%\\GOG.com\\Galaxy\\storage\\"
-    DEFAULT_DB = DEFAULT_DB_PATH + DB_NAME
+    DEFAULT_DB_PATH = "%PROGRAMDATA%\\GOG.com\\Galaxy\\storage"
 
     # Variables
-    path_to_galaxy_client = DEFAULT_PATH_TO_GALAXY_CLIENT
-    path_to_db = DEFAULT_DB
+    path_to_galaxy_client = os.path.expandvars(DEFAULT_PATH_TO_GALAXY_CLIENT)
+    path_to_exe = os.path.join(path_to_galaxy_client, EXE_NAME)
+    path_to_db = os.path.expandvars(DEFAULT_DB_PATH)
+    path_to_db_file = os.path.join(path_to_db, DB_NAME)
 
     def __init__(self):
         super().__init__()
@@ -53,7 +53,7 @@ class goggalaxy(kp.Plugin):
 
     def on_execute(self, item, action):
         kpu.shell_execute(
-            os.path.expandvars(self.path_to_galaxy_client),
+            self.path_to_exe,
             ["/command=runGame", "/gameId=" + item.target()]
             )
 
@@ -72,7 +72,7 @@ class goggalaxy(kp.Plugin):
     def _load_games(self):
         games = []
         try:
-            connection = sqlite3.connect(os.path.expandvars(self.path_to_db))
+            connection = sqlite3.connect(self.path_to_db_file)
             c = connection.cursor()
 
             queries = [
@@ -98,7 +98,7 @@ class goggalaxy(kp.Plugin):
 
     def _create_launch_item(self, game):
         return self.create_item(
-            category=kp.ItemCategory.KEYWORD,
+            category=kp.ItemCategory.REFERENCE,
             label="GOG Galaxy: " + game.title,
             short_desc=game.platform,
             target=game.releaseKey,
@@ -108,18 +108,23 @@ class goggalaxy(kp.Plugin):
 
     def _read_config(self):
         settings = self.load_settings()
-        self.path_to_galaxy_client = settings.get_stripped(
+        self.path_to_galaxy_client = os.path.expandvars(settings.get_stripped(
             "path_to_galaxy_client",
             "main",
             self.DEFAULT_PATH_TO_GALAXY_CLIENT
-            )
-        self.path_to_db = settings.get_stripped(
+            ))
+
+        self.path_to_exe = os.path.join(self.path_to_galaxy_client, self.EXE_NAME)
+
+        self.path_to_db = os.path.expandvars(settings.get_stripped(
             "path_to_db",
             "main",
-            self.DEFAULT_DB
-            )
+            self.DEFAULT_DB_PATH
+            ))
+
+        self.path_to_db_file = os.path.join(self.path_to_db, self.DB_NAME)
 
         icon_handle = self.load_icon(
-            "@{},0".format(self.path_to_galaxy_client))
+            "@{},0".format(self.path_to_exe))
         if icon_handle:
             self.set_default_icon(icon_handle)
