@@ -27,12 +27,14 @@ class goggalaxy(kp.Plugin):
     DEFAULT_PATH_TO_GALAXY_CLIENT = "%PROGRAMFILES(X86)%\\GOG Galaxy"
     DB_NAME = "galaxy-2.0.db"
     DEFAULT_DB_PATH = "%PROGRAMDATA%\\GOG.com\\Galaxy\\storage"
+    DEFAULT_WEBCACHE_PATH = "%PROGRAMDATA%\\GOG.com\\Galaxy\\webcache"
 
     # Variables
     path_to_galaxy_client = os.path.expandvars(DEFAULT_PATH_TO_GALAXY_CLIENT)
     path_to_exe = os.path.join(path_to_galaxy_client, EXE_NAME)
     path_to_db = os.path.expandvars(DEFAULT_DB_PATH)
     path_to_db_file = os.path.join(path_to_db, DB_NAME)
+    path_to_webcache = os.path.expandvars(DEFAULT_WEBCACHE_PATH)
     platforms = {}
 
     def __init__(self):
@@ -145,11 +147,12 @@ class goggalaxy(kp.Plugin):
                 c.execute('SELECT wcr.userId, ogl.gameId, wcr.filename FROM WebCacheResources wcr, OriginalGameLinks ogl WHERE wcr.webCacheResourceTypeId=2 AND wcr.releaseKey=? AND ogl.releaseKey=wcr.releaseKey', (game.releaseKey, ))
                 row = c.fetchone()
                 if row is not None:
-                    original_path = os.path.join("C:\\ProgramData\\GOG.com\\Galaxy\\webcache", str(row[0]), game.platform, row[1], row[2])
+                    original_path = os.path.join(self.path_to_webcache, str(row[0]), game.platform, row[1], row[2])
                     if (os.path.exists(original_path)):
                         # create an empty file first to avoid problems with long running conversion
                         open(cache_path, 'a')
                         kpu.shell_execute("dwebp.exe", (original_path, "-o", cache_path), show=0)
+
         connection.close()
 
     def _read_config(self):
@@ -169,6 +172,12 @@ class goggalaxy(kp.Plugin):
             ))
 
         self.path_to_db_file = os.path.join(self.path_to_db, self.DB_NAME)
+
+        self.path_to_webcache = os.path.expandvars(settings.get_stripped(
+            "path_to_webcache",
+            "main",
+            self.DEFAULT_WEBCACHE_PATH
+            ))
 
         icon_handle = self.load_icon(
             "@{},0".format(self.path_to_exe))
