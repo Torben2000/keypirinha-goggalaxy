@@ -28,6 +28,8 @@ class goggalaxy(kp.Plugin):
     DB_NAME = "galaxy-2.0.db"
     DEFAULT_DB_PATH = "%PROGRAMDATA%\\GOG.com\\Galaxy\\storage"
     DEFAULT_WEBCACHE_PATH = "%PROGRAMDATA%\\GOG.com\\Galaxy\\webcache"
+    DEFAULT_DWEBP_PATH = ""
+    DWEBP_EXE_NAME = "dwebp.exe"
 
     # Variables
     path_to_galaxy_client = os.path.expandvars(DEFAULT_PATH_TO_GALAXY_CLIENT)
@@ -35,6 +37,8 @@ class goggalaxy(kp.Plugin):
     path_to_db = os.path.expandvars(DEFAULT_DB_PATH)
     path_to_db_file = os.path.join(path_to_db, DB_NAME)
     path_to_webcache = os.path.expandvars(DEFAULT_WEBCACHE_PATH)
+    path_to_dwebp = os.path.expandvars(DEFAULT_DWEBP_PATH)
+    dwebp_exe = os.path.join(path_to_dwebp, DWEBP_EXE_NAME)
     platforms = {}
 
     def __init__(self):
@@ -134,6 +138,12 @@ class goggalaxy(kp.Plugin):
         return os.path.join(self.get_package_cache_path(), "icons", releaseKey + ".png")
 
     def _load_icons(self, games):
+        try:
+            kpu.shell_execute(self.dwebp_exe, show=0)
+        except FileNotFoundError:
+            self.warn("dwebp.exe not found, icons will not be loaded")
+            return
+
         connection = sqlite3.connect(self.path_to_db_file)
         c = connection.cursor()
 
@@ -151,7 +161,7 @@ class goggalaxy(kp.Plugin):
                     if (os.path.exists(original_path)):
                         # create an empty file first to avoid problems with long running conversion
                         open(cache_path, 'a')
-                        kpu.shell_execute("dwebp.exe", (original_path, "-o", cache_path), show=0)
+                        kpu.shell_execute(self.dwebp_exe, (original_path, "-o", cache_path), show=0)
 
         connection.close()
 
@@ -178,6 +188,14 @@ class goggalaxy(kp.Plugin):
             "main",
             self.DEFAULT_WEBCACHE_PATH
             ))
+
+        self.path_to_dwebp = os.path.expandvars(settings.get_stripped(
+            "path_to_dwebp",
+            "main",
+            self.DEFAULT_DWEBP_PATH
+            ))
+
+        self.dwebp_exe = os.path.join(self.path_to_dwebp, self.DWEBP_EXE_NAME)
 
         icon_handle = self.load_icon(
             "@{},0".format(self.path_to_exe))
