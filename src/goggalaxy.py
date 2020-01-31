@@ -45,6 +45,8 @@ class goggalaxy(kp.Plugin):
         self._load_platforms()
         games = self._load_games()
 
+        self._load_icons(games)
+
         catalog = []
         for game in games:
             catalog.append(self._create_launch_item(game))
@@ -118,8 +120,37 @@ class goggalaxy(kp.Plugin):
             short_desc=self.platforms[game.platform] if game.platform in self.platforms else str(game.platform).capitalize(),
             target=game.releaseKey,
             args_hint=kp.ItemArgsHint.FORBIDDEN,
-            hit_hint=kp.ItemHitHint.NOARGS
+            hit_hint=kp.ItemHitHint.NOARGS,
+            icon_handle=self._get_icon(game.releaseKey)
             )
+
+    def _get_icon(self, releaseKey):
+        if os.path.exists(self._build_icon_cache_path(releaseKey)):
+            return self.load_icon("cache://{}/icons/{}.png".format(self.package_full_name(), releaseKey))
+
+    def _build_icon_cache_path(self, releaseKey):
+        return os.path.join(self.get_package_cache_path(), "icons", releaseKey + ".png")
+
+    def _load_icons(self, games):
+        connection = sqlite3.connect(self.path_to_db_file)
+        c = connection.cursor()
+
+        icons_cache_path = os.path.join(self.get_package_cache_path(True), "icons")
+        if not os.path.exists(icons_cache_path):
+            os.mkdir(icons_cache_path)
+
+        for game in games:
+            cache_path = self._build_icon_cache_path(game.releaseKey)
+            if not os.path.exists(cache_path):
+                c.execute('SELECT wcr.userId, ogl.gameId, wcr.filename FROM WebCacheResources wcr, OriginalGameLinks ogl WHERE wcr.webCacheResourceTypeId=2 AND wcr.releaseKey=? AND ogl.releaseKey=wcr.releaseKey', (game.releaseKey, ))
+                row = c.fetchone()
+                if row is not None:
+                    original_path = os.path.join("C:\\ProgramData\\GOG.com\\Galaxy\\webcache", str(row[0]), game.platform, row[1], row[2])
+                    if (os.path.exists(original_path)):
+                        # create an empty file first to avoid problems with long running conversion
+                        open(cache_path, 'a')
+                        kpu.shell_execute("dwebp.exe", (original_path, "-o", cache_path), show=0)
+        connection.close()
 
     def _read_config(self):
         settings = self.load_settings()
