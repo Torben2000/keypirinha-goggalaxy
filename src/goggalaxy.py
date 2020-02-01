@@ -83,13 +83,16 @@ class goggalaxy(kp.Plugin):
     def _load_platforms(self):
         self.platforms = {}
 
-        vendor_js = kpu.slurp_text_file(os.path.join(self.path_to_galaxy_client, "web\\vendor.js"))
+        vendor_js = kpu.slurp_text_file(os.path.join(
+            self.path_to_galaxy_client, "web\\vendor.js"))
 
         platform_ids = {}
-        for m in re.finditer("PlatformId\\[\\\"(.*)\\\"\\] = \\\"(.*)\\\";", vendor_js):
+        platform_id_re = "PlatformId\\[\\\"(.*)\\\"\\] = \\\"(.*)\\\";"
+        for m in re.finditer(platform_id_re, vendor_js):
             platform_ids[m.group(1)] = m.group(2)
 
-        for m in re.finditer("AccountFullPlatformName\\[\\\"(.*)\\\"\\] = \\\"(.*)\\\";", vendor_js):
+        afpn_re = "AccountFullPlatformName\\[\\\"(.*)\\\"\\] = \\\"(.*)\\\";"
+        for m in re.finditer(afpn_re, vendor_js):
             self.platforms[platform_ids[m.group(1)]] = m.group(2)
 
     def _load_games(self):
@@ -99,8 +102,32 @@ class goggalaxy(kp.Plugin):
             c = connection.cursor()
 
             queries = [
-                'SELECT p.name as platform, gp.releaseKey, substr(gp.value, 11, length(gp.value)-12) as title from GamePieces gp, InstalledExternalProducts iep, platforms p WHERE gp.gamePieceTypeId = 3396 AND iep.platformId = p.id AND gp.releaseKey = (p.name || "_" || iep.productId);',
-                'SELECT "generic" as platform, le.releaseKey, substr(gp.value, 11, length(gp.value)-12) as title from GamePieces gp, LinkedExecutables le WHERE gp.gamePieceTypeId = 3396 AND gp.releaseKey = le.releaseKey;'
+                'SELECT '
+                + 'p.name as platform, '
+                + 'gp.releaseKey, '
+                + 'substr(gp.value, 11, length(gp.value)-12) as title '
+                + 'FROM '
+                + 'GamePieces gp, '
+                + 'InstalledExternalProducts iep, '
+                + 'platforms p '
+                + 'WHERE '
+                + 'gp.gamePieceTypeId = 3396 '
+                + 'AND '
+                + 'iep.platformId = p.id '
+                + 'AND '
+                + 'gp.releaseKey = (p.name || "_" || iep.productId);',
+
+                'SELECT '
+                + '"generic" as platform, '
+                + 'le.releaseKey, '
+                + 'substr(gp.value, 11, length(gp.value)-12) as title '
+                + 'FROM '
+                + 'GamePieces gp, '
+                + 'LinkedExecutables le '
+                + 'WHERE '
+                + 'gp.gamePieceTypeId = 3396 '
+                + 'AND '
+                + 'gp.releaseKey = le.releaseKey;'
             ]
 
             for query in queries:
@@ -114,16 +141,21 @@ class goggalaxy(kp.Plugin):
 
             connection.close()
 
-        except:
+        except sqlite3.Error:
             self.err("Unable to load database file: " + str(self.path_to_db))
 
         return games
 
     def _create_launch_item(self, game):
+        if game.platform in self.platforms:
+            short = self.platforms[game.platform]
+        else:
+            short = str(game.platform).capitalize()
+
         return self.create_item(
             category=kp.ItemCategory.REFERENCE,
             label="GOG Galaxy: " + game.title,
-            short_desc=self.platforms[game.platform] if game.platform in self.platforms else str(game.platform).capitalize(),
+            short_desc=short,
             target=game.releaseKey,
             args_hint=kp.ItemArgsHint.FORBIDDEN,
             hit_hint=kp.ItemHitHint.NOARGS,
@@ -132,10 +164,14 @@ class goggalaxy(kp.Plugin):
 
     def _get_icon(self, releaseKey):
         if os.path.exists(self._build_icon_cache_path(releaseKey)):
-            return self.load_icon("cache://{}/icons/{}.png".format(self.package_full_name(), releaseKey))
+            return self.load_icon("cache://{}/icons/{}.png".format(
+                self.package_full_name(), releaseKey))
 
     def _build_icon_cache_path(self, releaseKey):
-        return os.path.join(self.get_package_cache_path(), "icons", releaseKey + ".png")
+        return os.path.join(
+            self.get_package_cache_path(),
+            "icons",
+            releaseKey + ".png")
 
     def _load_icons(self, games):
         try:
@@ -147,21 +183,46 @@ class goggalaxy(kp.Plugin):
         connection = sqlite3.connect(self.path_to_db_file)
         c = connection.cursor()
 
-        icons_cache_path = os.path.join(self.get_package_cache_path(True), "icons")
+        icons_cache_path = os.path.join(
+            self.get_package_cache_path(True),
+            "icons")
         if not os.path.exists(icons_cache_path):
             os.mkdir(icons_cache_path)
 
         for game in games:
             cache_path = self._build_icon_cache_path(game.releaseKey)
             if not os.path.exists(cache_path):
-                c.execute('SELECT wcr.userId, ogl.gameId, wcr.filename FROM WebCacheResources wcr, OriginalGameLinks ogl WHERE wcr.webCacheResourceTypeId=2 AND wcr.releaseKey=? AND ogl.releaseKey=wcr.releaseKey', (game.releaseKey, ))
+                c.execute(
+                    'SELECT '
+                    + 'wcr.userId, '
+                    + 'ogl.gameId, '
+                    + 'wcr.filename '
+                    + 'FROM '
+                    + 'WebCacheResources wcr, '
+                    + 'OriginalGameLinks ogl '
+                    + 'WHERE '
+                    + 'wcr.webCacheResourceTypeId=2 '
+                    + 'AND '
+                    + 'wcr.releaseKey=? '
+                    + 'AND '
+                    + 'ogl.releaseKey=wcr.releaseKey',
+                    (game.releaseKey, ))
+
                 row = c.fetchone()
                 if row is not None:
-                    original_path = os.path.join(self.path_to_webcache, str(row[0]), game.platform, row[1], row[2])
+                    original_path = os.path.join(
+                        self.path_to_webcache,
+                        str(row[0]),
+                        game.platform,
+                        row[1],
+                        row[2])
                     if (os.path.exists(original_path)):
-                        # create an empty file first to avoid problems with long running conversion
+                        # empty file avoids problems with long running shell
                         open(cache_path, 'a')
-                        kpu.shell_execute(self.dwebp_exe, (original_path, "-o", cache_path), show=0)
+                        kpu.shell_execute(
+                            self.dwebp_exe,
+                            (original_path, "-o", cache_path),
+                            show=0)
 
         connection.close()
 
@@ -173,7 +234,9 @@ class goggalaxy(kp.Plugin):
             self.DEFAULT_PATH_TO_GALAXY_CLIENT
             ))
 
-        self.path_to_exe = os.path.join(self.path_to_galaxy_client, self.EXE_NAME)
+        self.path_to_exe = os.path.join(
+            self.path_to_galaxy_client,
+            self.EXE_NAME)
 
         self.path_to_db = os.path.expandvars(settings.get_stripped(
             "path_to_db",
