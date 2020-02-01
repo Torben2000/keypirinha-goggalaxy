@@ -1,70 +1,78 @@
 # Keypirinha Plugin: goggalaxy
 
-This is goggalaxy, a plugin for the
-[Keypirinha](http://keypirinha.com) launcher.
+This is goggalaxy, a plugin for the [Keypirinha](http://keypirinha.com)
+launcher.
 
-**TODO:** write a brief description of this package. Optionally add a
-screenshot.
+It enables launching of installed games that are available in
+[GOG Galaxy 2.0](https://www.gogalaxy.com/). It supports all platforms that work
+within GOG Galaxy 2.0 including manually added games.
+
+**INFO:** Only supports version 2.0 of GOG Galaxy which is currently in beta
+state. It is not intended to be used with GOG Galaxy 1.x!
+
+**INFO 2:** For individual game icon support `dwebp.exe` is needed. See
+*Install* section below for details.
 
 
 ## Download
 
-**TODO:** indicate where the latest `.keypirinha-package` file can be
-downloaded. For example a URL to the `releases` list like:
-https://github.com/USERNAME/keypirinha-PACKAGE/releases
+You can download the latest release from the
+[releases](https://github.com/Torben2000/keypirinha-goggalaxy/releases) page.
 
 
 ## Install
 
-Once the `goggalaxy.keypirinha-package` file is installed,
-move it to the `InstalledPackage` folder located at:
+Once the `goggalaxy.keypirinha-package` file is downloaded, move it to the
+`InstalledPackage` folder located at:
 
 * `Keypirinha\portable\Profile\InstalledPackages` in **Portable mode**
 * **Or** `%APPDATA%\Keypirinha\InstalledPackages` in **Installed mode** (the
   final path would look like
   `C:\Users\%USERNAME%\AppData\Roaming\Keypirinha\InstalledPackages`)
 
+### Optional
+For individual game icons (instead of the generic GOG Galaxy icon), the icons
+used within GOG Galaxy 2.0 need to be converted from WebP to a format that is
+compatible with Keypirinha. To achieve this, the plugin uses `dwebp.exe`.
+2 steps are necessary to make it work:
+
+1. Download it from https://developers.google.com/speed/webp/download.
+2. Make the `dwebp.exe` available to the plugin by
+   * **Either** putting it into a folder that is within the system's path
+   * **Or** putting it anywhere and configuring the plugin to use this folder by
+   setting the `path_to_dwebp` setting.
+
 
 ## Usage
 
-**TODO:** list the items, if any, inserted to the Catalog by the plugin(s) of
-this package. Some plugins only make suggestions, in which case a description of
-what kind of suggestions are to be expected by the user may help.
+Games that are installed and available withing GOG Galaxy 2.0 should work
+out-of-the-box. Just search for them with Keypirinha and launch them normally
+(prefix in search results is `GOG Galaxy`).
+
+If you installed GOG Galaxy 2.0 somewhere else or your database is not in the
+standard location, adjust the plugin's configuration.
+
+If it is still not working or you feel it is not behaving correctly, check
+Keypirinha's console for details and/or report an
+[issue](https://github.com/Torben2000/keypirinha-goggalaxy/issues).
 
 
 ## Change Log
 
-**TODO:** describe notable changes for each release. Below is a template for
-version 1.0.
-
 ### v1.0
 
-* Added foo item
-* Fixed bug that was doing bad things when item "bar" was selected
+* Initial release
 
 
 ## License
 
-**TODO:** recommended section. Below is an example that goes with the default
-LICENSE file (MIT license). Do not forget to add your name in the `LICENSE`
-file!
-
 This package is distributed under the terms of the MIT license.
-
-
-## Credits
-
-**TODO:** optional section.
 
 
 ## Contribute
 
-**TODO:** optional section. Below is a template example, based on the one found
-in Keypirinha's Packages repository.
+If you find any bugs or have suggestions for further features, please file an
+[issue](https://github.com/Torben2000/keypirinha-goggalaxy/issues).
 
-1. Check for open issues or open a fresh issue to start a discussion around a
-   feature idea or a bug.
-2. Fork this repository on GitHub to start making your changes to the **dev**
-   branch.
-3. Send a pull request.
-4. Add yourself to the *Contributors* section below (or create it if needed)!
+If you want to contribute directly to the code, just fork the repo, do your
+changes and create a pull request.
