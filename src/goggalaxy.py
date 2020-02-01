@@ -200,27 +200,26 @@ class goggalaxy(kp.Plugin):
                     c.execute(
                         'SELECT '
                         + 'wcr.userId, '
-                        + 'ogl.gameId, '
                         + 'wcr.filename '
                         + 'FROM '
-                        + 'WebCacheResources wcr, '
-                        + 'OriginalGameLinks ogl '
+                        + 'WebCacheResources wcr '
                         + 'WHERE '
                         + 'wcr.webCacheResourceTypeId=2 '
                         + 'AND '
-                        + 'wcr.releaseKey=? '
-                        + 'AND '
-                        + 'ogl.releaseKey=wcr.releaseKey',
+                        + 'wcr.releaseKey=?',
                         (game.releaseKey, ))
 
                     row = c.fetchone()
                     if row is not None:
+                        platform_game_id = game.releaseKey.rpartition("_")[2]
                         original_path = os.path.join(
                             self.path_to_webcache,
                             str(row[0]),
                             game.platform,
-                            row[1],
-                            row[2])
+                            platform_game_id,
+                            row[1])
+                        self.dbg("Expected icon path for {}: {}".format(
+                                game.title, original_path))
                         if (os.path.exists(original_path)):
                             # add file to work around race condition
                             open(cache_path, 'a')
