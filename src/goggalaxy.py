@@ -8,7 +8,7 @@ import re
 
 
 class Game():
-    def __init__(self, platform, releaseKey, title):
+    def __init__(self, platform: str, releaseKey: str, title: str):
         self.platform = platform
         self.releaseKey = releaseKey
         self.title = title
@@ -139,13 +139,13 @@ class goggalaxy(kp.Plugin):
                     platform = row[0]
                     releaseKey = row[1]
                     title = row[2]
-                    self.dbg("Game " + str([platform, releaseKey, title]))
+                    self.dbg("Adding game", str([platform, releaseKey, title]))
                     games.append(Game(platform, releaseKey, title))
 
             connection.close()
 
-        except sqlite3.Error:
-            self.err("Unable to load database file: " + str(self.path_to_db))
+        except sqlite3.Error as err:
+            self.err("Error while loading icons from database: ", err)
 
         return games
 
@@ -153,7 +153,7 @@ class goggalaxy(kp.Plugin):
         if game.platform in self.platforms:
             short = self.platforms[game.platform]
         else:
-            short = str(game.platform).capitalize()
+            short = game.platform.capitalize()
 
         return self.create_item(
             category=kp.ItemCategory.REFERENCE,
@@ -229,8 +229,8 @@ class goggalaxy(kp.Plugin):
                                 show=0)
 
             connection.close()
-        except sqlite3.Error:
-            self.err("Unable to load database file: " + str(self.path_to_db))
+        except sqlite3.Error as err:
+            self.err("Error while loading icons from database: ", err)
 
     def _read_config(self):
         settings = self.load_settings()
