@@ -45,7 +45,7 @@ compatible with Keypirinha. To achieve this, the plugin uses `dwebp.exe`.
 
 ## Usage
 
-Games that are installed and available withing GOG Galaxy 2.0 should work
+Games that are installed and available within GOG Galaxy 2.0 should work
 out-of-the-box. Just search for them with Keypirinha and launch them normally
 (prefix in search results is `GOG Galaxy`).
 
