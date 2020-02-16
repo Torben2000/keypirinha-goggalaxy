@@ -14,13 +14,17 @@ state. It is not intended to be used with GOG Galaxy 1.x!
 *Install* section below for details.
 
 
-## Download
+## Install
+
+### Option 1: Managed
+
+Use [PackageControl](https://github.com/ueffel/Keypirinha-PackageControl) to
+to install the plugin.
+
+### Option 2: Manual
 
 You can download the latest release from the
 [releases](https://github.com/Torben2000/keypirinha-goggalaxy/releases) page.
-
-
-## Install
 
 Once the `goggalaxy.keypirinha-package` file is downloaded, move it to the
 `InstalledPackage` folder located at:
