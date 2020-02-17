@@ -30,6 +30,9 @@ class goggalaxy(kp.Plugin):
     DEFAULT_WEBCACHE_PATH = "%PROGRAMDATA%\\GOG.com\\Galaxy\\webcache"
     DEFAULT_DWEBP_PATH = ""
     DWEBP_EXE_NAME = "dwebp.exe"
+    CATEGORY_INSTALLED_GAME = kp.ItemCategory.USER_BASE + 1
+    COMMAND_RUN_GAME = "runGame"
+    COMMAND_OPEN_DETAILS = "launch"
 
     # Variables
     path_to_galaxy_client = os.path.expandvars(DEFAULT_PATH_TO_GALAXY_CLIENT)
@@ -46,6 +49,22 @@ class goggalaxy(kp.Plugin):
 
     def on_start(self):
         self._read_config()
+
+        actions = []
+        actions.append(self.create_action(
+            name="rungame",
+            label="Run game",
+            short_desc="Launches the game via GOG Galaxy",
+            data_bag=self.COMMAND_RUN_GAME
+        ))
+        actions.append(self.create_action(
+            name="opendetails",
+            label="Open game details",
+            short_desc="Opens GOG Galaxy on the game's detail page",
+            data_bag=self.COMMAND_OPEN_DETAILS
+        ))
+
+        self.set_actions(self.CATEGORY_INSTALLED_GAME, actions)
 
     def on_catalog(self):
         self._load_platforms()
@@ -64,9 +83,13 @@ class goggalaxy(kp.Plugin):
         pass
 
     def on_execute(self, item, action):
+        command = self.COMMAND_RUN_GAME
+        if action is not None:
+            command = action.data_bag()
+
         kpu.shell_execute(
             self.path_to_exe,
-            ["/command=runGame", "/gameId=" + item.target()]
+            ["/command=" + command, "/gameId=" + item.target()]
             )
 
     def on_activated(self):
@@ -177,7 +200,7 @@ class goggalaxy(kp.Plugin):
             short = game.platform.capitalize()
 
         return self.create_item(
-            category=kp.ItemCategory.REFERENCE,
+            category=self.CATEGORY_INSTALLED_GAME,
             label="GOG Galaxy: " + game.title,
             short_desc=short,
             target=game.releaseKey,
