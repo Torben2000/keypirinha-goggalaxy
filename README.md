@@ -63,6 +63,11 @@ Keypirinha's console for details and/or report an
 
 ## Change Log
 
+### v1.0.1
+
+* Support for GOG games
+* Remove hardcoded id that is individual per installation
+
 ### v1.0
 
 * Initial release
