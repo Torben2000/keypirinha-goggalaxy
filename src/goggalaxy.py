@@ -106,6 +106,21 @@ class goggalaxy(kp.Plugin):
 
             queries = [
                 'SELECT '
+                + '"gog", '
+                + 'gp.releaseKey, '
+                + 'substr(gp.value, 11, length(gp.value)-12) '
+                + 'FROM '
+                + 'GamePieceTypes gpt, '
+                + 'GamePieces gp, '
+                + 'InstalledProducts ip '
+                + 'WHERE '
+                + 'gpt.type = "title" '
+                + 'AND '
+                + 'gp.gamePieceTypeId = gpt.id '
+                + 'AND '
+                + 'gp.releaseKey = ("gog_" || ip.productId);',
+
+                'SELECT '
                 + 'p.name, '
                 + 'gp.releaseKey, '
                 + 'substr(gp.value, 11, length(gp.value)-12) '
