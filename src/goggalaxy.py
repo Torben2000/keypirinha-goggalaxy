@@ -31,6 +31,7 @@ class goggalaxy(kp.Plugin):
     DEFAULT_DWEBP_PATH = ""
     DWEBP_EXE_NAME = "dwebp.exe"
     CATEGORY_INSTALLED_GAME = kp.ItemCategory.USER_BASE + 1
+    CATEGORY_SEARCH_GAMES = kp.ItemCategory.USER_BASE + 2
     COMMAND_RUN_GAME = "runGame"
     COMMAND_OPEN_DETAILS = "launch"
 
@@ -43,6 +44,7 @@ class goggalaxy(kp.Plugin):
     path_to_dwebp = os.path.expandvars(DEFAULT_DWEBP_PATH)
     dwebp_exe = os.path.join(path_to_dwebp, DWEBP_EXE_NAME)
     platforms = {}
+    all_games_items = []
 
     def __init__(self):
         super().__init__()
@@ -74,13 +76,39 @@ class goggalaxy(kp.Plugin):
         self._load_icons(games)
 
         catalog = []
+        catalog.append(self.create_item(
+            category=self.CATEGORY_SEARCH_GAMES,
+            label="GOG Galaxy",
+            short_desc="Search all games",
+            target="search",
+            args_hint=kp.ItemArgsHint.REQUIRED,
+            hit_hint=kp.ItemHitHint.KEEPALL
+        ))
+
         for game in games:
-            catalog.append(self._create_launch_item(game))
+            catalog.append(self._create_launch_item(game, "GOG Galaxy: "))
+            self.all_games_items.append(self._create_launch_item(game))
 
         self.set_catalog(catalog)
 
     def on_suggest(self, user_input, items_chain):
-        pass
+        if not items_chain or items_chain[0].category() != self.CATEGORY_SEARCH_GAMES:
+            return
+        if len(items_chain) == 1:
+            self.set_suggestions(
+                self._filter(user_input),
+                kp.Match.FUZZY,
+                kp.Sort.LABEL_ASC
+            )
+
+    def _filter(self, user_input):
+        return list(filter(
+            lambda item: self._has_name(item, user_input), self.all_games_items))
+
+    def _has_name(self, item, user_input):
+        if user_input.upper() in item.label().upper():
+            return item
+        return False
 
     def on_execute(self, item, action):
         command = self.COMMAND_RUN_GAME
@@ -193,7 +221,7 @@ class goggalaxy(kp.Plugin):
 
         return games
 
-    def _create_launch_item(self, game):
+    def _create_launch_item(self, game, prefix=""):
         if game.platform in self.platforms:
             short = self.platforms[game.platform]
         else:
@@ -201,7 +229,7 @@ class goggalaxy(kp.Plugin):
 
         return self.create_item(
             category=self.CATEGORY_INSTALLED_GAME,
-            label="GOG Galaxy: " + game.title,
+            label=prefix + game.title,
             short_desc=short,
             target=game.releaseKey,
             args_hint=kp.ItemArgsHint.FORBIDDEN,
