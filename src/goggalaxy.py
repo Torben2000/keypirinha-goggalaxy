@@ -38,7 +38,8 @@ class goggalaxy(kp.Plugin):
     DEFAULT_DWEBP_PATH = ""
     DWEBP_EXE_NAME = "dwebp.exe"
     CATEGORY_INSTALLED_GAME = kp.ItemCategory.USER_BASE + 1
-    CATEGORY_SEARCH_GAMES = kp.ItemCategory.USER_BASE + 2
+    CATEGORY_UNINSTALLED_GAME = kp.ItemCategory.USER_BASE + 2
+    CATEGORY_SEARCH_GAMES = kp.ItemCategory.USER_BASE + 3
     COMMAND_RUN_GAME = "runGame"
     COMMAND_OPEN_DETAILS = "launch"
 
@@ -59,21 +60,31 @@ class goggalaxy(kp.Plugin):
     def on_start(self):
         self._read_config()
 
-        actions = []
-        actions.append(self.create_action(
+        actions_installed = []
+        actions_installed.append(self.create_action(
             name="rungame",
             label="Run game",
             short_desc="Launches the game via GOG Galaxy",
             data_bag=self.COMMAND_RUN_GAME
         ))
-        actions.append(self.create_action(
+        actions_installed.append(self.create_action(
             name="opendetails",
             label="Open game details",
             short_desc="Opens GOG Galaxy on the game's detail page",
             data_bag=self.COMMAND_OPEN_DETAILS
         ))
 
-        self.set_actions(self.CATEGORY_INSTALLED_GAME, actions)
+        self.set_actions(self.CATEGORY_INSTALLED_GAME, actions_installed)
+
+        actions_uninstalled = []
+        actions_uninstalled.append(self.create_action(
+            name="opendetails",
+            label="Open game details",
+            short_desc="Opens GOG Galaxy on the game's detail page",
+            data_bag=self.COMMAND_OPEN_DETAILS
+        ))
+
+        self.set_actions(self.CATEGORY_UNINSTALLED_GAME, actions_uninstalled)
 
     def on_catalog(self):
         self._load_platforms()
@@ -228,8 +239,13 @@ class goggalaxy(kp.Plugin):
         else:
             short = game.platform.capitalize()
 
+        if game.installed:
+            category = self.CATEGORY_INSTALLED_GAME
+        else:
+            category = self.CATEGORY_UNINSTALLED_GAME
+
         return self.create_item(
-            category=self.CATEGORY_INSTALLED_GAME,
+            category=category,
             label=prefix + game.title,
             short_desc=short,
             target=game.releaseKey,
