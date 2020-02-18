@@ -217,7 +217,7 @@ class goggalaxy(kp.Plugin):
             connection.close()
 
         except sqlite3.Error as err:
-            self.err("Error while loading icons from database: ", err)
+            self.err("Error while loading games from database: ", err)
 
         return games
 
