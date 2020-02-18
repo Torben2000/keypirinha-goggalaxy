@@ -8,10 +8,17 @@ import re
 
 
 class Game():
-    def __init__(self, platform: str, releaseKey: str, title: str):
+    def __init__(
+            self,
+            platform: str,
+            releaseKey: str,
+            title: str,
+            installed: bool
+            ):
         self.platform = platform
         self.releaseKey = releaseKey
         self.title = title
+        self.installed = installed
 
 
 class goggalaxy(kp.Plugin):
@@ -86,8 +93,9 @@ class goggalaxy(kp.Plugin):
         ))
 
         for game in games:
-            catalog.append(self._create_launch_item(game, "GOG Galaxy: "))
             self.all_games_items.append(self._create_launch_item(game))
+            if game.installed:
+                catalog.append(self._create_launch_item(game, "GOG Galaxy: "))
 
         self.set_catalog(catalog)
 
@@ -155,64 +163,57 @@ class goggalaxy(kp.Plugin):
             connection = sqlite3.connect(self.path_to_db_file)
             c = connection.cursor()
 
-            queries = [
+            query = (
                 'SELECT '
-                + '"gog", '
-                + 'gp.releaseKey, '
-                + 'substr(gp.value, 11, length(gp.value)-12) '
+                + 'og.releaseKey, '
+                + 'substr(gp.value, 11, length(gp.value)-12), '
+                + '(SELECT '
+                + '    COUNT(*) '
+                + '    FROM '
+                + '    InstalledProducts ip '
+                + '    WHERE '
+                + '    og.releaseKey = ("gog_" || ip.productId)'
+                + ') + '
+                + '(SELECT '
+                + '    COUNT(*) '
+                + '    FROM '
+                + '    InstalledExternalProducts iep, '
+                + '    platforms p '
+                + '    WHERE '
+                + '    iep.platformId = p.id '
+                + '    AND '
+                + '    og.releaseKey = (p.name || "_" || iep.productId)'
+                + ') + '
+                + '(SELECT '
+                + '    COUNT(*) '
+                + '    FROM '
+                + '    LinkedExecutables le '
+                + '    WHERE '
+                + '    og.releaseKey = le.releaseKey'
+                + ') '
                 + 'FROM '
+                + 'OwnedGames og, '
                 + 'GamePieceTypes gpt, '
-                + 'GamePieces gp, '
-                + 'InstalledProducts ip '
+                + 'GamePieces gp '
                 + 'WHERE '
+                + 'og.releaseKey = gp.releaseKey '
+                + 'AND '
                 + 'gpt.type = "title" '
                 + 'AND '
-                + 'gp.gamePieceTypeId = gpt.id '
-                + 'AND '
-                + 'gp.releaseKey = ("gog_" || ip.productId);',
+                + 'gp.gamePieceTypeId = gpt.id;'
+            )
 
-                'SELECT '
-                + 'p.name, '
-                + 'gp.releaseKey, '
-                + 'substr(gp.value, 11, length(gp.value)-12) '
-                + 'FROM '
-                + 'GamePieceTypes gpt, '
-                + 'GamePieces gp, '
-                + 'InstalledExternalProducts iep, '
-                + 'platforms p '
-                + 'WHERE '
-                + 'gpt.type = "title" '
-                + 'AND '
-                + 'gp.gamePieceTypeId = gpt.id '
-                + 'AND '
-                + 'iep.platformId = p.id '
-                + 'AND '
-                + 'gp.releaseKey = (p.name || "_" || iep.productId);',
-
-                'SELECT '
-                + '"generic", '
-                + 'le.releaseKey, '
-                + 'substr(gp.value, 11, length(gp.value)-12) '
-                + 'FROM '
-                + 'GamePieceTypes gpt, '
-                + 'GamePieces gp, '
-                + 'LinkedExecutables le '
-                + 'WHERE '
-                + 'gpt.type = "title" '
-                + 'AND '
-                + 'gp.gamePieceTypeId = gpt.id '
-                + 'AND '
-                + 'gp.releaseKey = le.releaseKey;'
-            ]
-
-            for query in queries:
-                c.execute(query)
-                for row in c.fetchall():
-                    platform = row[0]
-                    releaseKey = row[1]
-                    title = row[2]
-                    self.dbg("Adding game", str([platform, releaseKey, title]))
-                    games.append(Game(platform, releaseKey, title))
+            c.execute(query)
+            for row in c.fetchall():
+                releaseKey = str(row[0])
+                platform = releaseKey.partition("_")[0]
+                title = row[1]
+                installed = row[2] > 0
+                self.dbg(
+                    "Adding game",
+                    str([platform, releaseKey, title, installed])
+                    )
+                games.append(Game(platform, releaseKey, title, installed))
 
             connection.close()
 
