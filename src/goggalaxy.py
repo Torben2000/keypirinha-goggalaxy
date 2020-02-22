@@ -42,6 +42,7 @@ class goggalaxy(kp.Plugin):
     CATEGORY_SEARCH_GAMES = kp.ItemCategory.USER_BASE + 3
     COMMAND_RUN_GAME = "runGame"
     COMMAND_OPEN_DETAILS = "launch"
+    COMMAND_UNINSTALL = "uninstallStart"
 
     # Variables
     path_to_galaxy_client = os.path.expandvars(DEFAULT_PATH_TO_GALAXY_CLIENT)
@@ -72,6 +73,12 @@ class goggalaxy(kp.Plugin):
             label="Open game details",
             short_desc="Opens GOG Galaxy on the game's detail page",
             data_bag=self.COMMAND_OPEN_DETAILS
+        ))
+        actions_installed.append(self.create_action(
+            name="uninstall",
+            label="Uninstall game",
+            short_desc="Uninstalls the game via GOG Galaxy",
+            data_bag=self.COMMAND_UNINSTALL
         ))
 
         self.set_actions(self.CATEGORY_INSTALLED_GAME, actions_installed)
