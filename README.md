@@ -63,6 +63,10 @@ Keypirinha's console for details and/or report an
 
 ## Change Log
 
+### v1.1.1
+
+* Uninstall only works for GOG games ([#1](https://github.com/Torben2000/keypirinha-goggalaxy/issues/1))
+
 ### v1.1
 
 * New features
