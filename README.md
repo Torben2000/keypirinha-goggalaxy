@@ -63,6 +63,13 @@ Keypirinha's console for details and/or report an
 
 ## Change Log
 
+### v1.1
+
+* New features
+  * Open game detail view (#2 )
+  * Search in all games incl. uninstalled (#3 )
+  * Uninstall games (experimental, might resolve #1 )
+
 ### v1.0.1
 
 * Support for GOG games
