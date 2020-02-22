@@ -40,6 +40,7 @@ class goggalaxy(kp.Plugin):
     CATEGORY_INSTALLED_GAME = kp.ItemCategory.USER_BASE + 1
     CATEGORY_UNINSTALLED_GAME = kp.ItemCategory.USER_BASE + 2
     CATEGORY_SEARCH_GAMES = kp.ItemCategory.USER_BASE + 3
+    CATEGORY_INSTALLED_GAME_GOG = kp.ItemCategory.USER_BASE + 4
     COMMAND_RUN_GAME = "runGame"
     COMMAND_OPEN_DETAILS = "launch"
     COMMAND_UNINSTALL = "uninstallStart"
@@ -74,14 +75,17 @@ class goggalaxy(kp.Plugin):
             short_desc="Opens GOG Galaxy on the game's detail page",
             data_bag=self.COMMAND_OPEN_DETAILS
         ))
-        actions_installed.append(self.create_action(
+        self.set_actions(self.CATEGORY_INSTALLED_GAME, actions_installed)
+
+        actions_installed_gog = actions_installed.copy()
+        actions_installed_gog.append(self.create_action(
             name="uninstall",
             label="Uninstall game",
-            short_desc="Uninstalls the game via GOG Galaxy",
+            short_desc="Uninstalls the game silently via GOG Galaxy",
             data_bag=self.COMMAND_UNINSTALL
         ))
 
-        self.set_actions(self.CATEGORY_INSTALLED_GAME, actions_installed)
+        self.set_actions(self.CATEGORY_INSTALLED_GAME_GOG, actions_installed_gog)
 
         actions_uninstalled = []
         actions_uninstalled.append(self.create_action(
@@ -247,7 +251,10 @@ class goggalaxy(kp.Plugin):
             short = game.platform.capitalize()
 
         if game.installed:
-            category = self.CATEGORY_INSTALLED_GAME
+            if game.platform == "gog":
+                category = self.CATEGORY_INSTALLED_GAME_GOG
+            else:
+                category = self.CATEGORY_INSTALLED_GAME
         else:
             category = self.CATEGORY_UNINSTALLED_GAME
 
