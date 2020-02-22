@@ -8,10 +8,17 @@ import re
 
 
 class Game():
-    def __init__(self, platform: str, releaseKey: str, title: str):
+    def __init__(
+            self,
+            platform: str,
+            releaseKey: str,
+            title: str,
+            installed: bool
+            ):
         self.platform = platform
         self.releaseKey = releaseKey
         self.title = title
+        self.installed = installed
 
 
 class goggalaxy(kp.Plugin):
@@ -31,6 +38,8 @@ class goggalaxy(kp.Plugin):
     DEFAULT_DWEBP_PATH = ""
     DWEBP_EXE_NAME = "dwebp.exe"
     CATEGORY_INSTALLED_GAME = kp.ItemCategory.USER_BASE + 1
+    CATEGORY_UNINSTALLED_GAME = kp.ItemCategory.USER_BASE + 2
+    CATEGORY_SEARCH_GAMES = kp.ItemCategory.USER_BASE + 3
     COMMAND_RUN_GAME = "runGame"
     COMMAND_OPEN_DETAILS = "launch"
 
@@ -43,6 +52,7 @@ class goggalaxy(kp.Plugin):
     path_to_dwebp = os.path.expandvars(DEFAULT_DWEBP_PATH)
     dwebp_exe = os.path.join(path_to_dwebp, DWEBP_EXE_NAME)
     platforms = {}
+    all_games_items = []
 
     def __init__(self):
         super().__init__()
@@ -50,21 +60,31 @@ class goggalaxy(kp.Plugin):
     def on_start(self):
         self._read_config()
 
-        actions = []
-        actions.append(self.create_action(
+        actions_installed = []
+        actions_installed.append(self.create_action(
             name="rungame",
             label="Run game",
             short_desc="Launches the game via GOG Galaxy",
             data_bag=self.COMMAND_RUN_GAME
         ))
-        actions.append(self.create_action(
+        actions_installed.append(self.create_action(
             name="opendetails",
             label="Open game details",
             short_desc="Opens GOG Galaxy on the game's detail page",
             data_bag=self.COMMAND_OPEN_DETAILS
         ))
 
-        self.set_actions(self.CATEGORY_INSTALLED_GAME, actions)
+        self.set_actions(self.CATEGORY_INSTALLED_GAME, actions_installed)
+
+        actions_uninstalled = []
+        actions_uninstalled.append(self.create_action(
+            name="opendetails",
+            label="Open game details",
+            short_desc="Opens GOG Galaxy on the game's detail page",
+            data_bag=self.COMMAND_OPEN_DETAILS
+        ))
+
+        self.set_actions(self.CATEGORY_UNINSTALLED_GAME, actions_uninstalled)
 
     def on_catalog(self):
         self._load_platforms()
@@ -74,13 +94,40 @@ class goggalaxy(kp.Plugin):
         self._load_icons(games)
 
         catalog = []
+        catalog.append(self.create_item(
+            category=self.CATEGORY_SEARCH_GAMES,
+            label="GOG Galaxy",
+            short_desc="Search all games",
+            target="search",
+            args_hint=kp.ItemArgsHint.REQUIRED,
+            hit_hint=kp.ItemHitHint.KEEPALL
+        ))
+
         for game in games:
-            catalog.append(self._create_launch_item(game))
+            self.all_games_items.append(self._create_launch_item(game))
+            if game.installed:
+                catalog.append(self._create_launch_item(game, "GOG Galaxy: "))
 
         self.set_catalog(catalog)
 
     def on_suggest(self, user_input, items_chain):
-        pass
+        if not items_chain or items_chain[0].category() != self.CATEGORY_SEARCH_GAMES:
+            return
+        if len(items_chain) == 1:
+            self.set_suggestions(
+                self._filter(user_input),
+                kp.Match.FUZZY,
+                kp.Sort.LABEL_ASC
+            )
+
+    def _filter(self, user_input):
+        return list(filter(
+            lambda item: self._has_name(item, user_input), self.all_games_items))
+
+    def _has_name(self, item, user_input):
+        if user_input.upper() in item.label().upper():
+            return item
+        return False
 
     def on_execute(self, item, action):
         command = self.COMMAND_RUN_GAME
@@ -127,81 +174,79 @@ class goggalaxy(kp.Plugin):
             connection = sqlite3.connect(self.path_to_db_file)
             c = connection.cursor()
 
-            queries = [
+            query = (
                 'SELECT '
-                + '"gog", '
-                + 'gp.releaseKey, '
-                + 'substr(gp.value, 11, length(gp.value)-12) '
+                + 'og.releaseKey, '
+                + 'substr(gp.value, 11, length(gp.value)-12), '
+                + '(SELECT '
+                + '    COUNT(*) '
+                + '    FROM '
+                + '    InstalledProducts ip '
+                + '    WHERE '
+                + '    og.releaseKey = ("gog_" || ip.productId)'
+                + ') + '
+                + '(SELECT '
+                + '    COUNT(*) '
+                + '    FROM '
+                + '    InstalledExternalProducts iep, '
+                + '    platforms p '
+                + '    WHERE '
+                + '    iep.platformId = p.id '
+                + '    AND '
+                + '    og.releaseKey = (p.name || "_" || iep.productId)'
+                + ') + '
+                + '(SELECT '
+                + '    COUNT(*) '
+                + '    FROM '
+                + '    LinkedExecutables le '
+                + '    WHERE '
+                + '    og.releaseKey = le.releaseKey'
+                + ') '
                 + 'FROM '
+                + 'OwnedGames og, '
                 + 'GamePieceTypes gpt, '
-                + 'GamePieces gp, '
-                + 'InstalledProducts ip '
+                + 'GamePieces gp '
                 + 'WHERE '
+                + 'og.releaseKey = gp.releaseKey '
+                + 'AND '
                 + 'gpt.type = "title" '
                 + 'AND '
-                + 'gp.gamePieceTypeId = gpt.id '
-                + 'AND '
-                + 'gp.releaseKey = ("gog_" || ip.productId);',
+                + 'gp.gamePieceTypeId = gpt.id;'
+            )
 
-                'SELECT '
-                + 'p.name, '
-                + 'gp.releaseKey, '
-                + 'substr(gp.value, 11, length(gp.value)-12) '
-                + 'FROM '
-                + 'GamePieceTypes gpt, '
-                + 'GamePieces gp, '
-                + 'InstalledExternalProducts iep, '
-                + 'platforms p '
-                + 'WHERE '
-                + 'gpt.type = "title" '
-                + 'AND '
-                + 'gp.gamePieceTypeId = gpt.id '
-                + 'AND '
-                + 'iep.platformId = p.id '
-                + 'AND '
-                + 'gp.releaseKey = (p.name || "_" || iep.productId);',
-
-                'SELECT '
-                + '"generic", '
-                + 'le.releaseKey, '
-                + 'substr(gp.value, 11, length(gp.value)-12) '
-                + 'FROM '
-                + 'GamePieceTypes gpt, '
-                + 'GamePieces gp, '
-                + 'LinkedExecutables le '
-                + 'WHERE '
-                + 'gpt.type = "title" '
-                + 'AND '
-                + 'gp.gamePieceTypeId = gpt.id '
-                + 'AND '
-                + 'gp.releaseKey = le.releaseKey;'
-            ]
-
-            for query in queries:
-                c.execute(query)
-                for row in c.fetchall():
-                    platform = row[0]
-                    releaseKey = row[1]
-                    title = row[2]
-                    self.dbg("Adding game", str([platform, releaseKey, title]))
-                    games.append(Game(platform, releaseKey, title))
+            c.execute(query)
+            for row in c.fetchall():
+                releaseKey = str(row[0])
+                platform = releaseKey.partition("_")[0]
+                title = row[1]
+                installed = row[2] > 0
+                self.dbg(
+                    "Adding game",
+                    str([platform, releaseKey, title, installed])
+                    )
+                games.append(Game(platform, releaseKey, title, installed))
 
             connection.close()
 
         except sqlite3.Error as err:
-            self.err("Error while loading icons from database: ", err)
+            self.err("Error while loading games from database: ", err)
 
         return games
 
-    def _create_launch_item(self, game):
+    def _create_launch_item(self, game, prefix=""):
         if game.platform in self.platforms:
             short = self.platforms[game.platform]
         else:
             short = game.platform.capitalize()
 
+        if game.installed:
+            category = self.CATEGORY_INSTALLED_GAME
+        else:
+            category = self.CATEGORY_UNINSTALLED_GAME
+
         return self.create_item(
-            category=self.CATEGORY_INSTALLED_GAME,
-            label="GOG Galaxy: " + game.title,
+            category=category,
+            label=prefix + game.title,
             short_desc=short,
             target=game.releaseKey,
             args_hint=kp.ItemArgsHint.FORBIDDEN,
