@@ -5,6 +5,7 @@ import keypirinha_util as kpu
 import os
 import sqlite3
 import re
+import time
 
 
 class Game():
@@ -98,6 +99,7 @@ class goggalaxy(kp.Plugin):
         self.set_actions(self.CATEGORY_UNINSTALLED_GAME, actions_uninstalled)
 
     def on_catalog(self):
+        start_time = time.time()
         self._load_platforms()
 
         games = self._load_games()
@@ -114,12 +116,17 @@ class goggalaxy(kp.Plugin):
             hit_hint=kp.ItemHitHint.KEEPALL
         ))
 
+        num_installed = 0
         for game in games:
             self.all_games_items.append(self._create_launch_item(game))
             if game.installed:
                 catalog.append(self._create_launch_item(game, "GOG Galaxy: "))
+                num_installed += 1
 
         self.set_catalog(catalog)
+
+        elapsed = time.time() - start_time
+        self.info("Cataloged {} games (incl. {} installed) in {:0.1f} seconds".format(len(games), num_installed, elapsed))
 
     def on_suggest(self, user_input, items_chain):
         if not items_chain or items_chain[0].category() != self.CATEGORY_SEARCH_GAMES:
