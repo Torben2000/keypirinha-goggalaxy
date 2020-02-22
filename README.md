@@ -66,9 +66,9 @@ Keypirinha's console for details and/or report an
 ### v1.1
 
 * New features
-  * Open game detail view (#2 )
-  * Search in all games incl. uninstalled (#3 )
-  * Uninstall games (experimental, might resolve #1 )
+  * Open game detail view ([#2](https://github.com/Torben2000/keypirinha-goggalaxy/issues/2))
+  * Search in all games incl. uninstalled ([#3](https://github.com/Torben2000/keypirinha-goggalaxy/issues/3))
+  * Uninstall games (experimental, might resolve [#1](https://github.com/Torben2000/keypirinha-goggalaxy/issues/1))
 
 ### v1.0.1
 
