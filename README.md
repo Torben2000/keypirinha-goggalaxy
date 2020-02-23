@@ -46,12 +46,18 @@ compatible with Keypirinha. To achieve this, the plugin uses `dwebp.exe`.
    * **Or** putting it anywhere and configuring the plugin to use this folder by
    setting the `path_to_dwebp` setting.
 
+**INFO:** The conversion of the images takes some time on larger libraries (can
+be some minutes). During that time Keypirinha might be unresponsive. This is 
+only required once, the converted images will be cached.
 
 ## Usage
 
 Games that are installed and available within GOG Galaxy 2.0 should work
 out-of-the-box. Just search for them with Keypirinha and launch them normally
-(prefix in search results is `GOG Galaxy`).
+(prefix in search results is `GOG Galaxy`). You can search through all your
+games (installed and not installed) with the `GOG Galaxy` search item. 
+Additional actions besides launching are opening the game's detail view and 
+uninstalling it (uninstall only works for GOG games).
 
 If you installed GOG Galaxy 2.0 somewhere else or your database is not in the
 standard location, adjust the plugin's configuration.
