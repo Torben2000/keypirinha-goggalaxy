@@ -69,6 +69,10 @@ Keypirinha's console for details and/or report an
 
 ## Change Log
 
+### v1.1.2
+
+* Fix for db change of GOG Galaxy 2.0.13
+
 ### v1.1.1
 
 * Uninstall only works for GOG games ([#1](https://github.com/Torben2000/keypirinha-goggalaxy/issues/1))
