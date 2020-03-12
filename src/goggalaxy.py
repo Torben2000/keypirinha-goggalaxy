@@ -218,7 +218,7 @@ class goggalaxy(kp.Plugin):
                 + '    FROM '
                 + '    LinkedExecutables le '
                 + '    WHERE '
-                + '    og.releaseKey = le.releaseKey'
+                + '    og.id = le.ownedGameId'
                 + ') '
                 + 'FROM '
                 + 'OwnedGames og, '
