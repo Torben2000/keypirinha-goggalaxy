@@ -177,11 +177,11 @@ class goggalaxy(kp.Plugin):
             self.path_to_galaxy_client, "web\\vendor.js"))
 
         platform_ids = {}
-        platform_id_re = "PlatformId\\[\\\"(.*)\\\"\\] = \\\"(.*)\\\";"
+        platform_id_re = "PlatformId\\.([^=]*)=\\\"([^\\\"]*)\\\""
         for m in re.finditer(platform_id_re, vendor_js):
             platform_ids[m.group(1)] = m.group(2)
 
-        afpn_re = "AccountFullPlatformName\\[\\\"(.*)\\\"\\] = \\\"(.*)\\\";"
+        afpn_re = "GamePlatformName\\.([^=]*)=\\\"([^\\\"]*)\\\""
         for m in re.finditer(afpn_re, vendor_js):
             self.platforms[platform_ids[m.group(1)]] = m.group(2)
 
