@@ -69,6 +69,10 @@ Keypirinha's console for details and/or report an
 
 ## Change Log
 
+### v1.1.4
+
+* Fix for db structure of GOG Galaxy 2.0.45
+
 ### v1.1.3
 
 * Fix for db change of GOG Galaxy 2.0.14
